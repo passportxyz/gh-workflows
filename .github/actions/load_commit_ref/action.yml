@@ -8,11 +8,11 @@ inputs:
 outputs:
   version_tag:
     value: ${{ steps.version.outputs.version_tag }}
-  docker_tag: 
+  docker_tag:
     value: ${{ steps.sha.outputs.sha_short }}
-  refspec: 
+  refspec:
     value: ${{ steps.ref.outputs.refspec }}
-    
+
 runs:
   using: composite
   steps:
@@ -43,8 +43,3 @@ runs:
       shell: bash
       run: |
         echo "sha_short=$(git rev-parse --short ${{ steps.ref.outputs.refspec }})" >> $GITHUB_OUTPUT
-
-  outputs:
-    version_tag: ${{ steps.version.outputs.version_tag }}
-    docker_tag: ${{ steps.sha.outputs.sha_short }}
-    refspec: ${{ steps.ref.outputs.refspec }}
