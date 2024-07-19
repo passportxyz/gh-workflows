@@ -15,7 +15,7 @@ inputs:
 outputs:
   deployed-commit:
     description: "The commit that was pushed to production"
-    value: ${{ steps.push-to-production.outputs.deployed-commit }}
+    value: ${{ steps.push-to-branch.outputs.deployed-commit }}
 runs:
   using: "composite"
   steps:
@@ -24,14 +24,13 @@ runs:
       shell: bash
       run: |
         git fetch
-        git checkout -b {{ inputs.branch }} origin/{{ inputs.branch }}
+        git checkout -b ${{ inputs.branch }} origin/${{ inputs.branch }}
         git reset --hard ${{ inputs.commit }}
         git remote set-url origin https://${{ inputs.github-token }}@github.com/${{ github.repository }}.git
-        git push origin {{ inputs.branch }} -f
+        git push origin ${{ inputs.branch }} -f
         echo "deployed-commit=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
-
     - name: Output deployment information
       shell: bash
       run: |
-        echo "Pushed to production-app branch"
-        echo "Commit: ${{ steps.push-to-production.outputs.deployed-commit }}"
+        echo "Pushed to ${{ inputs.branch }} branch"
+        echo "Commit: ${{ steps.push-to-branch.outputs.deployed-commit }}"
