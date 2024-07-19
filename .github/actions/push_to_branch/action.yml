@@ -1,5 +1,5 @@
-name: "Push to Production Branch"
-description: "Pushes a specified commit to the production-app branch"
+name: "Push to Branch"
+description: "Pushes a specified commit to a deployment branch"
 inputs:
   commit:
     description: "Branch/Commit ref to push"
