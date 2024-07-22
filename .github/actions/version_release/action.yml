@@ -1,0 +1,53 @@
+name: Test and Draft Release
+description: "Performs versioning and optionally creates a draft release"
+inputs:
+  commit:
+    description: "Commit short SHA"
+    required: false
+    type: string
+  create_release:
+    description: "Whether to create a draft release"
+    required: false
+    type: boolean
+    default: false
+outputs:
+  version_tag:
+    value: ${{ steps.version.outputs.version_tag }}
+  docker_tag:
+    value: ${{ steps.sha.outputs.sha_short }}
+  refspec:
+    value: ${{ steps.ref.outputs.refspec }}
+runs:
+  using: composite
+  steps:
+    - id: ref
+      shell: bash
+      run: |
+        echo "refspec=${{ inputs.commit || github.sha }}" >> $GITHUB_OUTPUT
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ steps.ref.outputs.refspec }}
+        fetch-depth: 0
+    - name: Store Commit SHA
+      id: sha
+      shell: bash
+      run: |
+        echo "sha_short=$(git rev-parse --short ${{ steps.ref.outputs.refspec }})" >> $GITHUB_OUTPUT
+    - name: Version
+      id: version
+      uses: paulhatch/semantic-version@v5.0.2
+      with:
+        tag_prefix: "v"
+        major_pattern: "(MAJOR)"
+        minor_pattern: "(MINOR)"
+    - name: Draft Release
+      if: ${{ inputs.create_release }}
+      uses: ncipollo/release-action@v1
+      with:
+        generateReleaseNotes: true
+        allowUpdates: true
+        token: ${{ github.token }}
+        tag: ${{ steps.version.outputs.version_tag }}
+        commit: ${{ steps.ref.outputs.refspec }}
+        draft: true
