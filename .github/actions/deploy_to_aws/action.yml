@@ -12,7 +12,7 @@ inputs:
     type: string
   pulumi_command:
     type: string
-    default: up
+    default: preview
   pulumi_diff:
     default: "false"
   PULUMI_ACCESS_TOKEN:
