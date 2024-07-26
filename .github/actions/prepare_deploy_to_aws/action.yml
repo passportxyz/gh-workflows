@@ -6,9 +6,9 @@ runs:
       uses: actions/setup-node@v2
       with:
         cache: "yarn"
-        cache-dependency-path: infra/package-lock.json
+        cache-dependency-path: infra/yarn.lock
 
     - run: |
-        npm install
+        yarn install
       shell: bash
       working-directory: infra
