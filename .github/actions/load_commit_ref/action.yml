@@ -23,20 +23,18 @@ runs:
       run: |
         echo "refspec=${{ inputs.commit || github.sha }}" >> $GITHUB_OUTPUT
 
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ steps.ref.outputs.refspec }}
+        fetch-depth: 0
+
     - name: Version
       # https://github.com/marketplace/actions/git-semantic-version
       id: version
       uses: paulhatch/semantic-version@v5.0.2
       with:
         tag_prefix: "v"
-        major_pattern: "(MAJOR)"
-        minor_pattern: "(MINOR)"
-
-    - name: Checkout
-      uses: actions/checkout@v3
-      with:
-        ref: ${{ steps.ref.outputs.refspec }}
-        fetch-depth: 0
 
     - name: Store Commit SHA
       id: sha
