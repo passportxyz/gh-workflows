@@ -5,9 +5,14 @@ inputs:
     required: true
     type: string
   stack_name:
+    description: "Pulumi stack name (S3-backend form, e.g. 'staging' or 'production')"
     required: true
     type: string
   aws_region:
+    required: true
+    type: string
+  aws_role_arn:
+    description: "ARN of the IAM role to assume via GitHub OIDC (e.g. arn:aws:iam::<acct>:role/pulumi-ci-<repo>-<env>)"
     required: true
     type: string
   pulumi_command:
@@ -15,12 +20,6 @@ inputs:
     default: preview
   pulumi_diff:
     default: "false"
-  PULUMI_ACCESS_TOKEN:
-    required: true
-  AWS_ACCESS_KEY_ID:
-    required: true
-  AWS_SECRET_ACCESS_KEY:
-    required: true
   OP_SERVICE_ACCOUNT_TOKEN:
     required: true
   CLOUDFLARE_API_TOKEN:
@@ -29,13 +28,19 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Configure AWS credentials (OIDC)
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ inputs.aws_role_arn }}
+        aws-region: ${{ inputs.aws_region }}
+    - name: Pulumi login (S3 backend)
+      shell: bash
+      run: pulumi login s3://passportxyz-pulumi-state
     - run: |
         pulumi stack select -c ${{ inputs.stack_name }}
         pulumi config -s ${{ inputs.stack_name }} set aws:region ${{ inputs.aws_region }} --non-interactive
       shell: bash
       working-directory: infra/aws
-      env:
-        PULUMI_ACCESS_TOKEN: ${{ inputs.PULUMI_ACCESS_TOKEN }}
     - uses: pulumi/actions@v5
       id: pulumi
       with:
@@ -45,9 +50,6 @@ runs:
         upsert: false
         work-dir: infra/aws
       env:
-        PULUMI_ACCESS_TOKEN: ${{ inputs.PULUMI_ACCESS_TOKEN }}
-        AWS_ACCESS_KEY_ID: ${{ inputs.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: ${{ inputs.aws_region }}
         DOCKER_IMAGE_TAG: ${{ inputs.docker_tag }}
         OP_SERVICE_ACCOUNT_TOKEN: ${{ inputs.OP_SERVICE_ACCOUNT_TOKEN }}
