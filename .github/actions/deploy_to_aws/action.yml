@@ -37,7 +37,7 @@ runs:
       shell: bash
       run: pulumi login s3://passportxyz-pulumi-state
     - run: |
-        pulumi stack select -c ${{ inputs.stack_name }}
+        pulumi stack select ${{ inputs.stack_name }}
         pulumi config -s ${{ inputs.stack_name }} set aws:region ${{ inputs.aws_region }} --non-interactive
       shell: bash
       working-directory: infra/aws
@@ -48,6 +48,7 @@ runs:
         diff: ${{ inputs.pulumi_diff }}
         stack-name: ${{ inputs.stack_name }}
         upsert: false
+        cloud-url: s3://passportxyz-pulumi-state
         work-dir: infra/aws
       env:
         AWS_DEFAULT_REGION: ${{ inputs.aws_region }}
