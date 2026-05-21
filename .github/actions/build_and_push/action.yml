@@ -19,9 +19,11 @@ inputs:
     required: true
     type: string
   dockerfile_name:
+    description: "Path to the Dockerfile, relative to repo root (e.g. ./api/Dockerfile)"
     required: false
     type: string
   build_dir:
+    description: "Docker build context directory, relative to repo root (e.g. ./api/)"
     required: false
     type: string
 runs:
@@ -44,9 +46,14 @@ runs:
       shell: bash
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ${{ inputs.ecr_repository_name }}
+        IMAGE_TAG: ${{ inputs.docker_tag }}
       run: |
         DOCKERFILE="${{ inputs.dockerfile_name || 'Dockerfile' }}"
         BUILD_DIR="${{ inputs.build_dir || '.' }}"
-        IMAGE_TAG="${ECR_REGISTRY}/${{ inputs.ecr_repository_name }}:${{ inputs.docker_tag }}"
-        docker build -t "$IMAGE_TAG" -f "$BUILD_DIR/$DOCKERFILE" "$BUILD_DIR"
-        docker push "$IMAGE_TAG"
+        IMAGE_REF="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+        # `dockerfile_name` is a repo-root-relative path (matching v3 semantics);
+        # `build_dir` is the docker context dir. Do not join them.
+        # --provenance=false avoids OCI image index in ECR (see prior fix in v3).
+        docker build --provenance=false -t "$IMAGE_REF" -f "$DOCKERFILE" "$BUILD_DIR"
+        docker push "$IMAGE_REF"
