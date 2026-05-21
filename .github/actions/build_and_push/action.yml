@@ -14,13 +14,8 @@ inputs:
   aws_region:
     required: true
     type: string
-  aws_access_key_id:
-    required: true
-    type: string
-  aws_session_token:
-    required: false
-    type: string
-  aws_secret_access_key:
+  aws_role_arn:
+    description: "ARN of the IAM role to assume via GitHub OIDC for ECR push"
     required: true
     type: string
   dockerfile_name:
@@ -29,42 +24,29 @@ inputs:
   build_dir:
     required: false
     type: string
-
 runs:
   using: composite
   steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         ref: ${{ inputs.refspec }}
         fetch-depth: 0
-
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
+    - name: Configure AWS credentials (OIDC)
+      uses: aws-actions/configure-aws-credentials@v4
       with:
-        aws-access-key-id: ${{ inputs.aws_access_key_id }}
-        aws-secret-access-key: ${{ inputs.aws_secret_access_key }}
+        role-to-assume: ${{ inputs.aws_role_arn }}
         aws-region: ${{ inputs.aws_region }}
-        aws-session-token: ${{ inputs.aws_session_token }}
-
     - name: Login to Amazon ECR
       id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
-
-    - name: Build docker image
-      shell: bash
-      env:
-        ECR_REPOSITORY: ${{ inputs.ecr_repository_name }}
-        IMAGE_TAG: ${{ inputs.docker_tag }}
-      run: |
-        docker build --provenance=false -t $ECR_REPOSITORY:$IMAGE_TAG -f ${{ inputs.dockerfile_name }} ${{ inputs.build_dir }}
-
-    - name: Tag and push image to Amazon ECR
+      uses: aws-actions/amazon-ecr-login@v2
+    - name: Build, tag, and push image to ECR
       shell: bash
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: ${{ inputs.ecr_repository_name }}
-        IMAGE_TAG: ${{ inputs.docker_tag }}
       run: |
-        docker tag $ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        DOCKERFILE="${{ inputs.dockerfile_name || 'Dockerfile' }}"
+        BUILD_DIR="${{ inputs.build_dir || '.' }}"
+        IMAGE_TAG="${ECR_REGISTRY}/${{ inputs.ecr_repository_name }}:${{ inputs.docker_tag }}"
+        docker build -t "$IMAGE_TAG" -f "$BUILD_DIR/$DOCKERFILE" "$BUILD_DIR"
+        docker push "$IMAGE_TAG"
