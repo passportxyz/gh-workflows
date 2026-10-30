@@ -33,6 +33,12 @@ runs:
       with:
         role-to-assume: ${{ inputs.aws_role_arn }}
         aws-region: ${{ inputs.aws_region }}
+    # ubuntu-latest is Ubuntu 26.04 since October 2026, which no longer ships the Pulumi CLI.
+    # Install it first, as the sync_to_s3 workflows in passport and passport-scorer do, so the login below works on any image.
+    - name: Install Pulumi CLI
+      uses: pulumi/actions@v5
+      with:
+        pulumi-version: "^3"
     - name: Pulumi login (S3 backend)
       shell: bash
       run: pulumi login s3://passportxyz-pulumi-state
