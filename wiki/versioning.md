@@ -11,7 +11,7 @@ Floating major tags (`v1`–`v5`) moved by hand, sometimes with a semver tag alo
 | v3 | `e1cb3e2` | `--provenance=false` on docker build (no OCI index in ECR); setup-node@v4 |
 | v4 / v4.0.0 | `8f32015` | deploy_to_aws: GitHub OIDC + S3 Pulumi state backend (`s3://passportxyz-pulumi-state`) |
 | v4.0.1 | `f089990` | deploy_to_aws fix: pin pulumi/actions `cloud-url` to S3 backend; drop `-c` on stack select |
-| v4.0.2 (planned) | `b4eab24` | deploy_to_aws: install the Pulumi CLI before `pulumi login` (Ubuntu 26.04 runners ship without it). Branch `fix/v4-install-pulumi`, on top of v4.0.1 |
+| v4.0.2 | `dad775a` | deploy_to_aws: install the Pulumi CLI (pinned `^3`) before `pulumi login`; Ubuntu 26.04 runners ship without it. Cut from branch `fix/v4-install-pulumi`, on top of v4.0.1. `v4` moves here |
 | v5 | `4dfb123` | build_and_push: OIDC for ECR push; `dockerfile_name` confirmed repo-root-relative (build refactored to single build+push step) |
 
 ## Known tag inconsistencies (verified)
